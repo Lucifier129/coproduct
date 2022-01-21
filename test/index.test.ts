@@ -1,4 +1,14 @@
-import { Err, match, Ok, Result, Option, Tagged, TaggedData, Some, None } from '../src';
+import {
+  Err,
+  match,
+  Ok,
+  Result,
+  Option,
+  Tagged,
+  TaggedData,
+  Some,
+  None,
+} from '../src';
 
 describe('coproduct', () => {
   it('works', () => {
@@ -12,13 +22,12 @@ describe('coproduct', () => {
     expect(show(Some(1))).toBe('some: 1');
     expect(show(None)).toBe('none');
 
-
     const showResult = <T>(result: Result<T>) => {
       return match(result).case({
         ok: value => `ok: ${value}`,
         err: value => `err: ${value}`,
       });
-    }
+    };
 
     expect(showResult(Ok(1))).toBe('ok: 1');
     expect(showResult(Err('error'))).toBe('err: error');
@@ -56,7 +65,6 @@ describe('coproduct', () => {
     expect(test9).toBe('b: a');
     expect(test10).toBe('c: true');
     expect(test11).toBe('d: 1 & 2 & 3');
-
 
     type CounterState = {
       count: number;

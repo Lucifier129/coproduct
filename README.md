@@ -1,8 +1,8 @@
 # coproduct
 
-<div style="text-align:center">
+<p align="center">
   <img width="400" src="./resource/coproduct-logos/coproduct-logos.jpeg">
-</div>
+</p>
 
 [![npm version](https://img.shields.io/npm/v/coproduct.svg?style=flat)](https://www.npmjs.com/package/coproduct)
 [![Build Status](https://travis-ci.org/Lucifier129/coproduct.svg?branch=master)](https://travis-ci.org/Lucifier129/coproduct)
