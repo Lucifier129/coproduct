@@ -5,7 +5,7 @@
 </p>
 
 [![npm version](https://img.shields.io/npm/v/coproduct.svg?style=flat)](https://www.npmjs.com/package/coproduct)
-[![Build Status](https://travis-ci.org/Lucifier129/coproduct.svg?branch=master)](https://travis-ci.org/Lucifier129/coproduct)
+![coproduct workflow](https://github.com/Lucifier129/coproduct/actions/workflows/main.yml/badge.svg)
 [![Documentation](https://img.shields.io/badge/documentation-yes-brightgreen.svg)](https://github.com/Lucifier129/coproduct#readme)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/Lucifier129/coproduct/graphs/commit-activity)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Lucifier129/coproduct/blob/master/LICENSE)
