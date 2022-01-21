@@ -88,6 +88,77 @@ expect(showResult(Ok(1))).toBe('ok: 1');
 expect(showResult(Err('error'))).toBe('err: error');
 ```
 
+For redux app
+
+```typescript
+// state type
+type CounterState = {
+  count: number;
+};
+
+// action type
+type CounterAction =
+  | Tagged<'incre'>
+  | Tagged<'decre'>
+  | TaggedData<'increBy', number>
+  | TaggedData<'decreBy', number>;
+
+// reducer type with match
+const counterReducer = (
+  state: CounterState,
+  action: CounterAction
+): CounterState => {
+  return match(action).case({
+    incre: () => ({
+      ...state,
+      count: state.count + 1,
+    }),
+    decre: () => ({
+      ...state,
+      count: state.count - 1,
+    }),
+    increBy: (value: number) => ({
+      ...state,
+      count: state.count + value,
+    }),
+    decreBy: (value: number) => ({
+      ...state,
+      count: state.count - value,
+    }),
+  });
+};
+
+// reducer type without match
+const counterReducer = (
+  state: CounterState,
+  action: CounterAction
+): CounterState => {
+  if (action.tag === 'incre') {
+    return {
+      ...state,
+      count: state.count + 1,
+    };
+  } else if (action.tag === 'decre') {
+    return {
+      ...state,
+      count: state.count - 1,
+    };
+  } else if (action.tag === 'increBy') {
+    return {
+      ...state,
+      count: state.count + action.increBy,
+    };
+  } else if (action.tag === 'decreBy') {
+    return {
+      ...state,
+      count: state.count - action.decreBy,
+    };
+  }
+
+  throw new Error(`Unexpected action: ${action}`);
+};
+```
+
 ## Api
 
 ### Tagged(string)
