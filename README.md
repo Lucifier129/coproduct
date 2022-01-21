@@ -187,7 +187,7 @@ const counterReducer = (
 
 ### Ok(value)
 
-`OK(value)` return the value with the `OK<T>` case of `Result Type`.
+`Ok(value)` return the value with the `Ok<T>` case of `Result Type`.
 
 ### Err(message)
 
