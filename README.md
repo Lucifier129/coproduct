@@ -51,7 +51,7 @@ const value1 = None;
 expect(show(value0)).toBe('some: 1');
 expect(show(value1)).toBe('none');
 
-// you can use if/ese to match manually if you want
+// you can use if/else to match manually if you want
 const show = <T>(data: Option<T>) => {
   if (data.tag === 'some') {
     return `some: ${data.some}`;
@@ -151,8 +151,6 @@ Give a ⭐️ if this project helped you!
 
 ## 📝 License
 
-Copyright © 2019 [Jade Gu](https://github.com/Lucifier129).
+Copyright © 2022 [Jade Gu](https://github.com/Lucifier129).
 
 This project is [MIT](https://github.com/Lucifier129/coproduct/blob/master/LICENSE) licensed.
-
---
