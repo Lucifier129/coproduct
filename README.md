@@ -16,8 +16,8 @@
 ## Benefits
 
 - Small bundled size(just 1kb)
-- Improving **Type-Safety** for your TypeScript Project
 - Easy to use with just a few apis to learn
+- Improving **Type-Safety** for your TypeScript Project via exhaustive pattern-matching
 
 ## Installation
 
