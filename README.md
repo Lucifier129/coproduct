@@ -55,7 +55,7 @@ expect(show(value1)).toBe('none');
 const show = <T>(data: Option<T>) => {
   if (data.tag === 'some') {
     return `some: ${data.some}`;
-  } else if ((data.tag = 'none')) {
+  } else if (data.tag === 'none') {
     return 'none';
   }
   throw new Error(`Unexpected data: ${data}`);
