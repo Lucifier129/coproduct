@@ -11,7 +11,7 @@ import {
 } from '../src';
 
 describe('coproduct', () => {
-  it('works', () => {
+  it('support exhaustive pattern-matching', () => {
     const show = <T>(data: Option<T>) => {
       return match(data).case({
         some: value => `some: ${value}`,
@@ -124,4 +124,35 @@ describe('coproduct', () => {
     expect(counterState3.count).toBe(2);
     expect(counterState4.count).toBe(-1);
   });
+
+  it('support non-exhaustive pattern-matching', () => {
+    const result0 = match(None as Option<number>).partial({
+      none: () => 0
+    })
+
+    expect(result0).toBe(0)
+
+    expect(() => {
+      match(None as Option<number>).partial({
+        some: () => 0
+      })
+    }).toThrowError()
+  })
+
+  it('supports default handler', () => {
+    const result0 = match(None as Option<number>).case({
+      _: () => 0
+    })
+    const result1 = match(Some(1) as Option<number>).case({
+      _: () => 1
+    })
+
+    const result2 = match(None as Option<number>).partial({
+      _: () => 2
+    })
+
+    expect(result0).toBe(0)
+    expect(result1).toBe(1)
+    expect(result2).toBe(2)
+  })
 });

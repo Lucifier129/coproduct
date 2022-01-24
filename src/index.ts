@@ -1,6 +1,6 @@
 type UnionToIntersection<T> = (T extends any
-? (x: T) => any
-: never) extends (x: infer R) => any
+  ? (x: T) => any
+  : never) extends (x: infer R) => any
   ? R
   : never;
 
@@ -20,43 +20,65 @@ export type TaggedData<Tag extends string, Data> = {
 
 type Visitor<T, R> = T extends Tagged<string>
   ? keyof T extends 'tag'
-    ? {
-        [key in T['tag']]: () => R;
-      }
-    : T extends {
-        [key in T['tag']]: infer Data;
-      }
-    ? {
-        [key in T['tag']]: (data: Data) => R;
-      }
-    : never
+  ? {
+    [key in T['tag']]: () => R;
+  }
+  : T extends {
+    [key in T['tag']]: infer Data;
+  }
+  ? {
+    [key in T['tag']]: (data: Data) => R;
+  }
+  : never
   : never;
 
-type Visitors<T extends Tagged<string>, R> = UnionToIntersection<Visitor<T, R>>;
+type Visitors<T extends Tagged<string>, R> = UnionToIntersection<Visitor<T, R>>
 
-export const match = <T extends Tagged<string>>(data: T) => {
-  return {
-    case<R>(
-      patterns: {
+interface Matcher<T extends Tagged<string>> {
+  case<R>(
+    patterns: {
+      [key in keyof Visitors<T, R>]: Visitors<T, R>[key];
+    }
+  ): R
+  case<R>(
+    patterns: Partial<
+      {
         [key in keyof Visitors<T, R>]: Visitors<T, R>[key];
       }
-    ): R {
+    > & {
+      _: () => R;
+    }
+  ): R
+  partial<R>(
+    patterns: Partial<
+      {
+        [key in keyof Visitors<T, R>]: Visitors<T, R>[key];
+      }
+    > & {
+      _?: () => R;
+    }
+  ): R
+}
+
+export const match = <T extends Tagged<string>>(data: T): Matcher<T> => {
+  return {
+    case(patterns) {
       if (data.tag in patterns) {
-        // @ts-ignore
+        // @ts-expect-error
         return patterns[data.tag](data[data.tag]);
+      }
+      if ('_' in patterns) {
+        return patterns._();
       }
       throw new Error(`Unexpected input: ${data}`);
     },
-    partial<R>(
-      patterns: Partial<
-        {
-          [key in keyof Visitors<T, R>]: Visitors<T, R>[key];
-        }
-      >
-    ): R {
+    partial(patterns) {
       if (data.tag in patterns) {
-        // @ts-ignore
+        // @ts-expect-error
         return patterns[data.tag](data[data.tag]);
+      }
+      if ('_' in patterns) {
+        return patterns._!();
       }
       throw new Error(`Unhandled branch: ${data.tag}`);
     },

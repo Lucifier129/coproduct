@@ -1,7 +1,7 @@
 {
   "name": "coproduct",
-  "description": "The coproduct is the dual of the product. It is the sum of the product of the two elements.",
-  "version": "1.0.0",
+  "description": "A small library aims to improve better tagged-unions/discriminated-unions supporting for TypeScript",
+  "version": "1.1.0",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -17,7 +17,7 @@
     "build": "tsdx build",
     "test": "tsdx test",
     "lint": "tsdx lint",
-    "prepare": "tsdx build",
+    "prepare": "npm run test && tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why"
   },

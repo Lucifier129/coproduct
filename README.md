@@ -11,13 +11,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Lucifier129/coproduct/blob/master/LICENSE)
 [![Twitter: guyingjie129](https://img.shields.io/twitter/follow/guyingjie129.svg?style=social)](https://twitter.com/guyingjie129)
 
-> A small library improve better tagged-union supporting for TypeScript
+> A small library aims to improve better tagged-unions/discriminated-unions supporting for TypeScript
 
 ## Benefits
 
 - Small bundled size(just 1kb)
 - Easy to use with just a few apis to learn
-- Improving **Type-Safety** for your TypeScript Project via exhaustive pattern-matching
+- Improving **Type-Safety** for your TypeScript project via exhaustive pattern-matching
 
 ## Installation
 
@@ -27,6 +27,77 @@ npm install --save coproduct
 ```
 
 ## Usage
+
+For redux app
+
+```typescript
+// state type
+type CounterState = {
+  count: number;
+};
+
+// action type
+type CounterAction =
+  | Tagged<'incre'>
+  | Tagged<'decre'>
+  | TaggedData<'increBy', number>
+  | TaggedData<'decreBy', number>;
+
+// reducer with match
+const counterReducer = (
+  state: CounterState,
+  action: CounterAction
+): CounterState => {
+  return match(action).case({
+    incre: () => ({
+      ...state,
+      count: state.count + 1,
+    }),
+    decre: () => ({
+      ...state,
+      count: state.count - 1,
+    }),
+    increBy: (value: number) => ({
+      ...state,
+      count: state.count + value,
+    }),
+    decreBy: (value: number) => ({
+      ...state,
+      count: state.count - value,
+    }),
+  });
+};
+
+// reducer without match
+const counterReducer = (
+  state: CounterState,
+  action: CounterAction
+): CounterState => {
+  if (action.tag === 'incre') {
+    return {
+      ...state,
+      count: state.count + 1,
+    };
+  } else if (action.tag === 'decre') {
+    return {
+      ...state,
+      count: state.count - 1,
+    };
+  } else if (action.tag === 'increBy') {
+    return {
+      ...state,
+      count: state.count + action.increBy,
+    };
+  } else if (action.tag === 'decreBy') {
+    return {
+      ...state,
+      count: state.count - action.decreBy,
+    };
+  }
+
+  throw new Error(`Unexpected action: ${action}`);
+};
+```
 
 Basic usage
 
@@ -88,77 +159,6 @@ expect(showResult(Ok(1))).toBe('ok: 1');
 expect(showResult(Err('error'))).toBe('err: error');
 ```
 
-For redux app
-
-```typescript
-// state type
-type CounterState = {
-  count: number;
-};
-
-// action type
-type CounterAction =
-  | Tagged<'incre'>
-  | Tagged<'decre'>
-  | TaggedData<'increBy', number>
-  | TaggedData<'decreBy', number>;
-
-// reducer type with match
-const counterReducer = (
-  state: CounterState,
-  action: CounterAction
-): CounterState => {
-  return match(action).case({
-    incre: () => ({
-      ...state,
-      count: state.count + 1,
-    }),
-    decre: () => ({
-      ...state,
-      count: state.count - 1,
-    }),
-    increBy: (value: number) => ({
-      ...state,
-      count: state.count + value,
-    }),
-    decreBy: (value: number) => ({
-      ...state,
-      count: state.count - value,
-    }),
-  });
-};
-
-// reducer type without match
-const counterReducer = (
-  state: CounterState,
-  action: CounterAction
-): CounterState => {
-  if (action.tag === 'incre') {
-    return {
-      ...state,
-      count: state.count + 1,
-    };
-  } else if (action.tag === 'decre') {
-    return {
-      ...state,
-      count: state.count - 1,
-    };
-  } else if (action.tag === 'increBy') {
-    return {
-      ...state,
-      count: state.count + action.increBy,
-    };
-  } else if (action.tag === 'decreBy') {
-    return {
-      ...state,
-      count: state.count - action.decreBy,
-    };
-  }
-
-  throw new Error(`Unexpected action: ${action}`);
-};
-```
-
 ## Api
 
 ### Tagged(string)
@@ -175,7 +175,7 @@ const counterReducer = (
 
 ### match(data).partial(patterns)
 
-`match(data).partial(patterns)` perform `non-exhaustive pattern-matching` for data.
+`match(data).partial(patterns)` perform `non-exhaustive pattern-matching` for data. If `data` has no handler, it will throw an error.
 
 ### Some(value)
 
@@ -192,6 +192,10 @@ const counterReducer = (
 ### Err(message)
 
 `Err(message)` return the value with the `Err<E>` case of `Result Type`.
+
+## Caveats
+
+- The symbol `_` can't be used as a tag name since it's a reserved filed in `coproduct` as placeholder for `default` case.
 
 ## Contribution Guide
 
