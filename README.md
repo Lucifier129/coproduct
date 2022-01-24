@@ -173,9 +173,13 @@ expect(showResult(Err('error'))).toBe('err: error');
 
 `match(data).case(patterns)` perform `exhaustive pattern-matching` for data, every case in `data` should has its own visitor function.
 
+**Note**: you can use `_: () => R` as default handler for unmatched case.
+
 ### match(data).partial(patterns)
 
 `match(data).partial(patterns)` perform `non-exhaustive pattern-matching` for data. If `data` has no handler, it will throw an error.
+
+**Note**: you can use `_: () => R` as default handler for unmatched case.
 
 ### Some(value)
 
