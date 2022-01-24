@@ -62,22 +62,24 @@ interface Matcher<T extends Tagged<string>> {
 
 export const match = <T extends Tagged<string>>(data: T): Matcher<T> => {
   return {
-    case(patterns) {
+    case(patterns: object) {
       if (data.tag in patterns) {
         // @ts-expect-error
         return patterns[data.tag](data[data.tag]);
       }
       if ('_' in patterns) {
+        // @ts-expect-error
         return patterns._();
       }
       throw new Error(`Unexpected input: ${data}`);
     },
-    partial(patterns) {
+    partial(patterns: object) {
       if (data.tag in patterns) {
         // @ts-expect-error
         return patterns[data.tag](data[data.tag]);
       }
       if ('_' in patterns) {
+        // @ts-expect-error
         return patterns._!();
       }
       throw new Error(`Unhandled branch: ${data.tag}`);
