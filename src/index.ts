@@ -1,6 +1,6 @@
 type UnionToIntersection<T> = (T extends any
-  ? (x: T) => any
-  : never) extends (x: infer R) => any
+? (x: T) => any
+: never) extends (x: infer R) => any
   ? R
   : never;
 
@@ -20,26 +20,26 @@ export type TaggedData<Tag extends string, Data> = {
 
 type Visitor<T, R> = T extends Tagged<string>
   ? keyof T extends 'tag'
-  ? {
-    [key in T['tag']]: () => R;
-  }
-  : T extends {
-    [key in T['tag']]: infer Data;
-  }
-  ? {
-    [key in T['tag']]: (data: Data) => R;
-  }
-  : never
+    ? {
+        [key in T['tag']]: () => R;
+      }
+    : T extends {
+        [key in T['tag']]: infer Data;
+      }
+    ? {
+        [key in T['tag']]: (data: Data) => R;
+      }
+    : never
   : never;
 
-type Visitors<T extends Tagged<string>, R> = UnionToIntersection<Visitor<T, R>>
+type Visitors<T extends Tagged<string>, R> = UnionToIntersection<Visitor<T, R>>;
 
 interface Matcher<T extends Tagged<string>> {
   case<R>(
     patterns: {
       [key in keyof Visitors<T, R>]: Visitors<T, R>[key];
     }
-  ): R
+  ): R;
   case<R>(
     patterns: Partial<
       {
@@ -48,7 +48,7 @@ interface Matcher<T extends Tagged<string>> {
     > & {
       _: () => R;
     }
-  ): R
+  ): R;
   partial<R>(
     patterns: Partial<
       {
@@ -57,7 +57,7 @@ interface Matcher<T extends Tagged<string>> {
     > & {
       _?: () => R;
     }
-  ): R
+  ): R;
 }
 
 export const match = <T extends Tagged<string>>(data: T): Matcher<T> => {
