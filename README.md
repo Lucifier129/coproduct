@@ -73,22 +73,22 @@ const counterReducer = (
   state: CounterState,
   action: CounterAction
 ): CounterState => {
-  if (action.tag === 'incre') {
+  if (action.$tag === 'incre') {
     return {
       ...state,
       count: state.count + 1,
     };
-  } else if (action.tag === 'decre') {
+  } else if (action.$tag === 'decre') {
     return {
       ...state,
       count: state.count - 1,
     };
-  } else if (action.tag === 'increBy') {
+  } else if (action.$tag === 'increBy') {
     return {
       ...state,
       count: state.count + action.increBy,
     };
-  } else if (action.tag === 'decreBy') {
+  } else if (action.$tag === 'decreBy') {
     return {
       ...state,
       count: state.count - action.decreBy,
@@ -104,15 +104,15 @@ Basic usage
 ```typescript
 import { Tagged, TaggedData, match } from 'coproduct';
 
-export type Option<T> = TaggedData<'some', T> | Tagged<'none'>;
+export type Option<T> = TaggedData<'Some', T> | Tagged<'None'>;
 
-export const None = Tagged('none');
-export const Some = TaggedData('some');
+export const None = Tagged('None');
+export const Some = TaggedData('Some');
 
 const show = <T>(data: Option<T>) => {
   return match(data).case({
-    some: value => `some: ${value}`,
-    none: () => 'none',
+    Some: value => `some: ${value}`,
+    None: () => 'none',
   });
 };
 
@@ -124,9 +124,9 @@ expect(show(value1)).toBe('none');
 
 // you can use if/else to match manually if you want
 const show = <T>(data: Option<T>) => {
-  if (data.tag === 'some') {
+  if (data.$tag === 'Some') {
     return `some: ${data.some}`;
-  } else if (data.tag === 'none') {
+  } else if (data.$tag === 'None') {
     return 'none';
   }
   throw new Error(`Unexpected data: ${data}`);
@@ -140,8 +140,8 @@ import { match, Option, Some, None, Result, Ok, Err } from 'coproduct';
 
 const show = <T>(data: Option<T>) => {
   return match(data).case({
-    some: value => `some: ${value}`,
-    none: () => 'none',
+    Some: value => `some: ${value}`,
+    None: () => 'none',
   });
 };
 
@@ -150,8 +150,8 @@ expect(show(None)).toBe('none');
 
 const showResult = <T>(result: Result<T>) => {
   return match(result).case({
-    ok: value => `ok: ${value}`,
-    err: value => `err: ${value}`,
+    Ok: value => `ok: ${value}`,
+    Err: value => `err: ${value}`,
   });
 };
 
@@ -163,11 +163,13 @@ expect(showResult(Err('error'))).toBe('err: error');
 
 ### Tagged(string)
 
-`Tagged(tag)` return a tagged object with `{ tag: tag }` structure. It's useful for nullary case.
+`Tagged(tag)` return a tagged object with `{ $tag: tag }` structure. It's useful for nullary case.
 
 ### TaggedData(string)
 
-`TaggedData(tag)` return a factory function with `(data: T) => TaggedData<tag, T>` signature. It's useful for the case that carried data
+`TaggedData(tag)` return a factory function with `(data: T) => TaggedData<tag, T>` signature. It's useful for the case that carried data.
+
+The structure of tagged data is `{ $tag: tag, [tag]: data }`.
 
 ### match(data).case(patterns)
 
@@ -199,6 +201,7 @@ expect(showResult(Err('error'))).toBe('err: error');
 
 ## Caveats
 
+- The name `$tag` is reserved for `$tag` property of tagged object, it can't be used as a tag name.
 - The symbol `_` can't be used as a tag name since it's a reserved filed in `coproduct` as placeholder for `default` case.
 
 ## Contribution Guide

@@ -14,8 +14,8 @@ describe('coproduct', () => {
   it('support exhaustive pattern-matching', () => {
     const show = <T>(data: Option<T>) => {
       return match(data).case({
-        some: value => `some: ${value}`,
-        none: () => 'none',
+        Some: value => `some: ${value}`,
+        None: () => 'none',
       });
     };
 
@@ -24,8 +24,8 @@ describe('coproduct', () => {
 
     const showResult = <T>(result: Result<T>) => {
       return match(result).case({
-        ok: value => `ok: ${value}`,
-        err: value => `err: ${value}`,
+        Ok: value => `ok: ${value}`,
+        Err: message => `err: ${message}`,
       });
     };
 
@@ -80,22 +80,22 @@ describe('coproduct', () => {
       state: CounterState,
       action: CounterAction
     ): CounterState => {
-      if (action.tag === 'incre') {
+      if (action.$tag === 'incre') {
         return {
           ...state,
           count: state.count + 1,
         };
-      } else if (action.tag === 'decre') {
+      } else if (action.$tag === 'decre') {
         return {
           ...state,
           count: state.count - 1,
         };
-      } else if (action.tag === 'increBy') {
+      } else if (action.$tag === 'increBy') {
         return {
           ...state,
           count: state.count + action.increBy,
         };
-      } else if (action.tag === 'decreBy') {
+      } else if (action.$tag === 'decreBy') {
         return {
           ...state,
           count: state.count - action.decreBy,
@@ -127,14 +127,14 @@ describe('coproduct', () => {
 
   it('support non-exhaustive pattern-matching', () => {
     const result0 = match(None as Option<number>).partial({
-      none: () => 0,
+      None: () => 0,
     });
 
     expect(result0).toBe(0);
 
     expect(() => {
       match(None as Option<number>).partial({
-        some: () => 0,
+        Some: () => 0,
       });
     }).toThrowError();
   });

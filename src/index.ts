@@ -5,7 +5,7 @@ type UnionToIntersection<T> = (T extends any
   : never;
 
 export type Tagged<Tag extends string> = {
-  tag: Tag;
+  $tag: Tag;
 };
 
 type Field<Key extends string, Value> = {
@@ -19,15 +19,15 @@ export type TaggedData<Tag extends string, Data> = {
 };
 
 type Visitor<T, R> = T extends Tagged<string>
-  ? keyof T extends 'tag'
+  ? keyof T extends '$tag'
     ? {
-        [key in T['tag']]: () => R;
+        [key in T['$tag']]: () => R;
       }
     : T extends {
-        [key in T['tag']]: infer Data;
+        [key in T['$tag']]: infer Data;
       }
     ? {
-        [key in T['tag']]: (data: Data) => R;
+        [key in T['$tag']]: (data: Data) => R;
       }
     : never
   : never;
@@ -63,9 +63,9 @@ interface Matcher<T extends Tagged<string>> {
 export const match = <T extends Tagged<string>>(data: T): Matcher<T> => {
   return {
     case(patterns: object) {
-      if (data.tag in patterns) {
+      if (data.$tag in patterns) {
         // @ts-expect-error
-        return patterns[data.tag](data[data.tag]);
+        return patterns[data.$tag](data[data.$tag]);
       }
       if ('_' in patterns) {
         // @ts-expect-error
@@ -74,44 +74,44 @@ export const match = <T extends Tagged<string>>(data: T): Matcher<T> => {
       throw new Error(`Unexpected input: ${data}`);
     },
     partial(patterns: object) {
-      if (data.tag in patterns) {
+      if (data.$tag in patterns) {
         // @ts-expect-error
-        return patterns[data.tag](data[data.tag]);
+        return patterns[data.$tag](data[data.$tag]);
       }
       if ('_' in patterns) {
         // @ts-expect-error
         return patterns._!();
       }
-      throw new Error(`Unhandled branch: ${data.tag}`);
+      throw new Error(`Unhandled branch: ${data.$tag}`);
     },
   };
 };
 
 export const Tagged = <Tag extends string>(tag: Tag): Tagged<Tag> => {
   return {
-    tag,
+    $tag: tag,
   };
 };
 
 export const TaggedData = <Tag extends string>(tag: Tag) => {
   return <Data>(data: Data) => {
     return {
-      tag,
+      $tag: tag,
       [tag]: data,
     } as TaggedData<Tag, Data>;
   };
 };
 
-export type Some<T> = TaggedData<'some', T>;
-export type None = Tagged<'none'>;
+export type Some<T> = TaggedData<'Some', T>;
+export type None = Tagged<'None'>;
 export type Option<T> = Some<T> | None;
 
-export const None = Tagged('none');
-export const Some = TaggedData('some');
+export const None = Tagged('None');
+export const Some = TaggedData('Some');
 
-export type Ok<T> = TaggedData<'ok', T>;
-export type Err<E = string> = TaggedData<'err', E>;
+export type Ok<T> = TaggedData<'Ok', T>;
+export type Err<E = string> = TaggedData<'Err', E>;
 export type Result<T, E = string> = Ok<T> | Err<E>;
 
-export const Err = TaggedData('err');
-export const Ok = TaggedData('ok');
+export const Err = TaggedData('Err');
+export const Ok = TaggedData('Ok');
