@@ -1,7 +1,7 @@
 {
   "name": "coproduct",
   "description": "A small library aims to improve better tagged-unions/discriminated-unions supporting for TypeScript",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

@@ -18,16 +18,28 @@ export type TaggedData<Tag extends string, Data> = {
   [key in keyof WithData<Tag, Data>]: WithData<Tag, Data>[key];
 };
 
+export type TagOf<T extends Tagged<string>> = T extends {
+  $tag: infer Tag;
+}
+  ? Tag
+  : never;
+
+export type DataOf<T extends TaggedData<any, unknown>> = T extends {
+  [key in TagOf<T>]: infer U;
+}
+  ? U
+  : never;
+
 type Visitor<T, R> = T extends Tagged<string>
   ? keyof T extends '$tag'
     ? {
-        [key in T['$tag']]: () => R;
+        [key in T['$tag']]: (ref: T) => R;
       }
     : T extends {
         [key in T['$tag']]: infer Data;
       }
     ? {
-        [key in T['$tag']]: (data: Data) => R;
+        [key in T['$tag']]: (data: Data, ref: T) => R;
       }
     : never
   : never;
@@ -46,7 +58,7 @@ interface Matcher<T extends Tagged<string>> {
         [key in keyof Visitors<T, R>]: Visitors<T, R>[key];
       }
     > & {
-      _: () => R;
+      _: (ref: T) => R;
     }
   ): R;
   partial<R>(
@@ -55,7 +67,7 @@ interface Matcher<T extends Tagged<string>> {
         [key in keyof Visitors<T, R>]: Visitors<T, R>[key];
       }
     > & {
-      _?: () => R;
+      _?: (ref: T) => R;
     }
   ): R;
 }
@@ -64,23 +76,35 @@ export const match = <T extends Tagged<string>>(data: T): Matcher<T> => {
   return {
     case(patterns: object) {
       if (data.$tag in patterns) {
-        // @ts-expect-error
-        return patterns[data.$tag](data[data.$tag]);
+        if (data.$tag in data) {
+          // @ts-ignore - this is a valid case
+          return patterns[data.$tag](data[data.$tag], data);
+        } else {
+          // @ts-ignore - this is a valid case
+          return patterns[data.$tag](data);
+        }
       }
+
       if ('_' in patterns) {
-        // @ts-expect-error
-        return patterns._();
+        // @ts-ignore - this is a valid case
+        return patterns._(data);
       }
+
       throw new Error(`Unexpected input: ${data}`);
     },
     partial(patterns: object) {
       if (data.$tag in patterns) {
-        // @ts-expect-error
-        return patterns[data.$tag](data[data.$tag]);
+        if (data.$tag in data) {
+          // @ts-ignore - this is a valid case
+          return patterns[data.$tag](data[data.$tag], data);
+        } else {
+          // @ts-ignore - this is a valid case
+          return patterns[data.$tag](data);
+        }
       }
       if ('_' in patterns) {
-        // @ts-expect-error
-        return patterns._!();
+        // @ts-ignore - this is a valid case
+        return patterns._!(data);
       }
       throw new Error(`Unhandled branch: ${data.$tag}`);
     },
