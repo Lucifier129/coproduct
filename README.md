@@ -38,10 +38,20 @@ type CounterState = {
 
 // action type
 type CounterAction =
-  | Tagged<'incre'>
-  | Tagged<'decre'>
-  | TaggedData<'increBy', number>
-  | TaggedData<'decreBy', number>;
+  | {
+      type: 'incre';
+    }
+  | {
+      type: 'decre';
+    }
+  | {
+      type: 'increBy';
+      step: number;
+    }
+  | {
+      type: 'decreBy';
+      step: number;
+    };
 
 // reducer with match
 const counterReducer = (
@@ -57,13 +67,13 @@ const counterReducer = (
       ...state,
       count: state.count - 1,
     }),
-    increBy: (value: number) => ({
+    increBy: ({ step }) => ({
       ...state,
-      count: state.count + value,
+      count: state.count + step,
     }),
-    decreBy: (value: number) => ({
+    decreBy: ({ step }) => ({
       ...state,
-      count: state.count - value,
+      count: state.count - step,
     }),
   });
 };
@@ -73,25 +83,25 @@ const counterReducer = (
   state: CounterState,
   action: CounterAction
 ): CounterState => {
-  if (action.$tag === 'incre') {
+  if (action.type === 'incre') {
     return {
       ...state,
       count: state.count + 1,
     };
-  } else if (action.$tag === 'decre') {
+  } else if (action.type === 'decre') {
     return {
       ...state,
       count: state.count - 1,
     };
-  } else if (action.$tag === 'increBy') {
+  } else if (action.type === 'increBy') {
     return {
       ...state,
-      count: state.count + action.increBy,
+      count: state.count + action.step,
     };
-  } else if (action.$tag === 'decreBy') {
+  } else if (action.type === 'decreBy') {
     return {
       ...state,
-      count: state.count - action.decreBy,
+      count: state.count - action.step,
     };
   }
 
@@ -102,16 +112,26 @@ const counterReducer = (
 Basic usage
 
 ```typescript
-import { Tagged, TaggedData, match } from 'coproduct';
+import { match } from 'coproduct';
 
-export type Option<T> = TaggedData<'Some', T> | Tagged<'None'>;
+export type Option<T> = {
+  type: 'Some',
+  value: T
+} | {
+  type: 'None'
+}
 
-export const None = Tagged('None');
-export const Some = TaggedData('Some');
+export const None = {
+  type: 'None' as const;
+}
+export const Some = <T>(value: T) => ({
+  type: 'Some' as const,
+  value,
+});
 
 const show = <T>(data: Option<T>) => {
   return match(data).case({
-    Some: value => `some: ${value}`,
+    Some: data => `some: ${data.value}`,
     None: () => 'none',
   });
 };
@@ -124,9 +144,9 @@ expect(show(value1)).toBe('none');
 
 // you can use if/else to match manually if you want
 const show = <T>(data: Option<T>) => {
-  if (data.$tag === 'Some') {
+  if (data.type === 'Some') {
     return `some: ${data.some}`;
-  } else if (data.$tag === 'None') {
+  } else if (data.type === 'None') {
     return 'none';
   }
   throw new Error(`Unexpected data: ${data}`);
@@ -140,7 +160,7 @@ import { match, Option, Some, None, Result, Ok, Err } from 'coproduct';
 
 const show = <T>(data: Option<T>) => {
   return match(data).case({
-    Some: value => `some: ${value}`,
+    Some: data => `some: ${data.value}`,
     None: () => 'none',
   });
 };
@@ -150,8 +170,8 @@ expect(show(None)).toBe('none');
 
 const showResult = <T>(result: Result<T>) => {
   return match(result).case({
-    Ok: value => `ok: ${value}`,
-    Err: value => `err: ${value}`,
+    Ok: data => `ok: ${data.value}`,
+    Err: error => `err: ${error.info}`,
   });
 };
 
@@ -161,27 +181,41 @@ expect(showResult(Err('error'))).toBe('err: error');
 
 ## Api
 
-### Tagged(string)
-
-`Tagged(tag)` return a tagged object with `{ $tag: tag }` structure. It's useful for nullary case.
-
-### TaggedData(string)
-
-`TaggedData(tag)` return a factory function with `(data: T) => TaggedData<tag, T>` signature. It's useful for the case that carried data.
-
-The structure of tagged data is `{ $tag: tag, [tag]: data }`.
-
 ### match(data).case(patterns)
 
 `match(data).case(patterns)` perform `exhaustive pattern-matching` for data, every case in `data` should has its own visitor function.
 
 **Note**: you can use `_: () => R` as default handler for unmatched case.
 
-### match(data).partial(patterns)
+### createMatch(tagField) => match
 
-`match(data).partial(patterns)` perform `non-exhaustive pattern-matching` for data. If `data` has no handler, it will throw an error.
+You can create your own `match` function with `tagField` to match your data.
 
-**Note**: you can use `_: () => R` as default handler for unmatched case.
+The default `match` of `coproduct` was created via `createMatch('type')`
+
+```ts
+const match = createMatch('tag');
+
+type Data =
+  | {
+      tag: 'a';
+      value: string;
+    }
+  | {
+      tag: 'b';
+      value: number;
+    };
+
+const handleData = (data: Data) => {
+  return match(data).case({
+    a: data => `a: ${data.value}`,
+    b: data => `b: ${data.value}`,
+  });
+};
+
+handleData({ tag: 'a', value: 'hello' }); // 'a: hello'
+handleData({ tag: 'b', value: 1 }); // 'b: 1'
+```
 
 ### Some(value)
 

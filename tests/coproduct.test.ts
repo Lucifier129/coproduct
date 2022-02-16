@@ -1,20 +1,10 @@
-import {
-  Err,
-  match,
-  Ok,
-  Result,
-  Option,
-  Tagged,
-  TaggedData,
-  Some,
-  None,
-} from '../src';
+import { Err, match, Ok, Result, Option, Some, None } from '../src';
 
 describe('coproduct', () => {
   it('support exhaustive pattern-matching', () => {
     const show = <T>(data: Option<T>) => {
       return match(data).case({
-        Some: value => `some: ${value}`,
+        Some: data => `some: ${data.value}`,
         None: () => 'none',
       });
     };
@@ -24,8 +14,8 @@ describe('coproduct', () => {
 
     const showResult = <T>(result: Result<T>) => {
       return match(result).case({
-        Ok: value => `ok: ${value}`,
-        Err: message => `err: ${message}`,
+        Ok: data => `ok: ${data.value}`,
+        Err: error => `err: ${error.info}`,
       });
     };
 
@@ -33,36 +23,56 @@ describe('coproduct', () => {
     expect(showResult(Err('error'))).toBe('err: error');
 
     type Test =
-      | TaggedData<'a', number>
-      | TaggedData<'b', string>
-      | TaggedData<'c', boolean>
-      | TaggedData<'d', number[]>;
-
-    const A = TaggedData('a');
-    const B = TaggedData('b');
-    const C = TaggedData('c');
-    const D = TaggedData('d');
+      | {
+          type: 'a';
+          a: number;
+        }
+      | {
+          type: 'b';
+          b: string;
+        }
+      | {
+          type: 'c';
+          c: boolean;
+        }
+      | {
+          type: 'd';
+          d: number[];
+        };
 
     const showTest = (data: Test) => {
       return match(data).case({
-        a: value => `a: ${value}`,
-        b: value => `b: ${value}`,
-        c: value => `c: ${value}`,
-        d: value => `d: ${value.join(' & ')}`,
+        a: data => `a: ${data.a}`,
+        b: data => `b: ${data.b}`,
+        c: data => `c: ${data.c}`,
+        d: data => `d: ${data.d.join(' & ')}`,
       });
     };
 
-    const test4: Test = A(1);
-    const test5: Test = B('a');
-    const test6: Test = C(true);
-    const test7: Test = D([1, 2, 3]);
+    const test4: Test = {
+      type: 'a',
+      a: 1,
+    };
+    const test5: Test = {
+      type: 'b',
+      b: 'b',
+    };
+    const test6: Test = {
+      type: 'c',
+      c: true,
+    };
+    const test7: Test = {
+      type: 'd',
+      d: [1, 2, 3],
+    };
+    
     const test8 = showTest(test4);
     const test9 = showTest(test5);
     const test10 = showTest(test6);
     const test11 = showTest(test7);
 
     expect(test8).toBe('a: 1');
-    expect(test9).toBe('b: a');
+    expect(test9).toBe('b: b');
     expect(test10).toBe('c: true');
     expect(test11).toBe('d: 1 & 2 & 3');
 
@@ -71,53 +81,71 @@ describe('coproduct', () => {
     };
 
     type CounterAction =
-      | Tagged<'incre'>
-      | Tagged<'decre'>
-      | TaggedData<'increBy', number>
-      | TaggedData<'decreBy', number>;
+      | {
+          type: 'incre';
+        }
+      | {
+          type: 'decre';
+        }
+      | {
+          type: 'increBy';
+          step: number;
+        }
+      | {
+          type: 'decreBy';
+          step: number;
+        };
 
     const counterReducer = (
       state: CounterState,
       action: CounterAction
     ): CounterState => {
-      if (action.$tag === 'incre') {
+      if (action.type === 'incre') {
         return {
           ...state,
           count: state.count + 1,
         };
-      } else if (action.$tag === 'decre') {
+      } else if (action.type === 'decre') {
         return {
           ...state,
           count: state.count - 1,
         };
-      } else if (action.$tag === 'increBy') {
+      } else if (action.type === 'increBy') {
         return {
           ...state,
-          count: state.count + action.increBy,
+          count: state.count + action.step,
         };
-      } else if (action.$tag === 'decreBy') {
+      } else if (action.type === 'decreBy') {
         return {
           ...state,
-          count: state.count - action.decreBy,
+          count: state.count - action.step,
         };
       }
 
       throw new Error(`Unexpected action: ${action}`);
     };
 
-    const Incre = Tagged('incre');
-    const Decre = Tagged('decre');
-    const IncreBy = TaggedData('increBy');
-    const DecreBy = TaggedData('decreBy');
+    const Incre: CounterAction = {
+      type: 'incre',
+    };
 
+    const Decre: CounterAction = {
+      type: 'decre',
+    };
     const counterState0: CounterState = {
       count: 0,
     };
 
     const counterState1 = counterReducer(counterState0, Incre);
     const counterState2 = counterReducer(counterState1, Decre);
-    const counterState3 = counterReducer(counterState2, IncreBy(2));
-    const counterState4 = counterReducer(counterState3, DecreBy(3));
+    const counterState3 = counterReducer(counterState2, {
+      type: 'increBy',
+      step: 2,
+    });
+    const counterState4 = counterReducer(counterState3, {
+      type: 'decreBy',
+      step: 3,
+    });
 
     expect(counterState1.count).toBe(1);
     expect(counterState2.count).toBe(0);
@@ -125,34 +153,16 @@ describe('coproduct', () => {
     expect(counterState4.count).toBe(-1);
   });
 
-  it('support non-exhaustive pattern-matching', () => {
-    const result0 = match(None as Option<number>).partial({
-      None: () => 0,
-    });
-
-    expect(result0).toBe(0);
-
-    expect(() => {
-      match(None as Option<number>).partial({
-        Some: () => 0,
-      });
-    }).toThrowError();
-  });
-
   it('supports default handler', () => {
     const result0 = match(None as Option<number>).case({
       _: () => 0,
     });
     const result1 = match(Some(1) as Option<number>).case({
+      None: () => 2,
       _: () => 1,
-    });
-
-    const result2 = match(None as Option<number>).partial({
-      _: () => 2,
     });
 
     expect(result0).toBe(0);
     expect(result1).toBe(1);
-    expect(result2).toBe(2);
   });
 });

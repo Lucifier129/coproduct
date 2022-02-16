@@ -1,141 +1,96 @@
-type UnionToIntersection<T> = (T extends any
-? (x: T) => any
-: never) extends (x: infer R) => any
-  ? R
-  : never;
+type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (x: infer R) => any ? R : never
 
-export type Tagged<Tag extends string> = {
-  $tag: Tag;
-};
-
-type Field<Key extends string, Value> = {
-  [key in Key]: Value;
-};
-
-type WithData<Tag extends string, Data> = Tagged<Tag> & Field<Tag, Data>;
-
-export type TaggedData<Tag extends string, Data> = {
-  [key in keyof WithData<Tag, Data>]: WithData<Tag, Data>[key];
-};
-
-export type TagOf<T extends Tagged<string>> = T extends {
-  $tag: infer Tag;
+type Tagged<Tag extends string, TagField extends string> = {
+  [key in TagField]: Tag
 }
-  ? Tag
-  : never;
 
-export type DataOf<T extends TaggedData<any, unknown>> = T extends {
-  [key in TagOf<T>]: infer U;
-}
-  ? U
-  : never;
+type DefaultTagFiled = 'type'
 
-type Visitor<T, R> = T extends Tagged<string>
-  ? keyof T extends '$tag'
-    ? {
-        [key in T['$tag']]: (ref: T) => R;
-      }
-    : T extends {
-        [key in T['$tag']]: infer Data;
-      }
-    ? {
-        [key in T['$tag']]: (data: Data, ref: T) => R;
-      }
-    : never
-  : never;
+type Visitor<T, R, TagFiled extends string = DefaultTagFiled> = T extends Tagged<infer Tag, TagFiled>
+  ? {
+      [key in Tag]: (value: T) => R
+    }
+  : never
 
-type Visitors<T extends Tagged<string>, R> = UnionToIntersection<Visitor<T, R>>;
+type Visitors<T extends Tagged<string, TagFiled>, R, TagFiled extends string = DefaultTagFiled> = UnionToIntersection<
+  Visitor<T, R, TagFiled>
+>
 
-interface Matcher<T extends Tagged<string>> {
+interface Matcher<T extends Tagged<string, TagFiled>, TagFiled extends string = DefaultTagFiled> {
+  case<R>(patterns: {
+    [key in keyof Visitors<T, R, TagFiled>]: Visitors<T, R, TagFiled>[key]
+  }): R
   case<R>(
-    patterns: {
-      [key in keyof Visitors<T, R>]: Visitors<T, R>[key];
-    }
-  ): R;
-  case<R>(
-    patterns: Partial<
-      {
-        [key in keyof Visitors<T, R>]: Visitors<T, R>[key];
-      }
-    > & {
-      _: (ref: T) => R;
-    }
-  ): R;
-  partial<R>(
-    patterns: Partial<
-      {
-        [key in keyof Visitors<T, R>]: Visitors<T, R>[key];
-      }
-    > & {
-      _?: (ref: T) => R;
-    }
-  ): R;
+    patterns: Partial<{
+      [key in keyof Visitors<T, R, TagFiled>]: Visitors<T, R, TagFiled>[key]
+    }> & {
+      _: (value: T) => R
+    },
+  ): R
 }
 
-export const match = <T extends Tagged<string>>(data: T): Matcher<T> => {
-  return {
-    case(patterns: object) {
-      if (data.$tag in patterns) {
-        if (data.$tag in data) {
-          // @ts-ignore - this is a valid case
-          return patterns[data.$tag](data[data.$tag], data);
-        } else {
-          // @ts-ignore - this is a valid case
-          return patterns[data.$tag](data);
-        }
-      }
-
-      if ('_' in patterns) {
-        // @ts-ignore - this is a valid case
-        return patterns._(data);
-      }
-
-      throw new Error(`Unexpected input: ${data}`);
-    },
-    partial(patterns: object) {
-      if (data.$tag in patterns) {
-        if (data.$tag in data) {
-          // @ts-ignore - this is a valid case
-          return patterns[data.$tag](data[data.$tag], data);
-        } else {
-          // @ts-ignore - this is a valid case
-          return patterns[data.$tag](data);
-        }
-      }
-      if ('_' in patterns) {
-        // @ts-ignore - this is a valid case
-        return patterns._!(data);
-      }
-      throw new Error(`Unhandled branch: ${data.$tag}`);
-    },
-  };
-};
-
-export const Tagged = <Tag extends string>(tag: Tag): Tagged<Tag> => {
-  return {
-    $tag: tag,
-  };
-};
-
-export const TaggedData = <Tag extends string>(tag: Tag) => {
-  return <Data>(data: Data) => {
+export const createMatch = <TagField extends string>(tagFiled: TagField) => {
+  return <T extends Tagged<string, TagField>>(data: T): Matcher<T, TagField> => {
     return {
-      $tag: tag,
-      [tag]: data,
-    } as TaggedData<Tag, Data>;
-  };
-};
+      case(patterns: object) {
+        const tag = data[tagFiled]
 
-export type Some<T> = TaggedData<'Some', T>;
-export type None = Tagged<'None'>;
-export type Option<T> = Some<T> | None;
+        if (tag in patterns) {
+          // @ts-ignore - this is a valid case
+          return patterns[tag](data)
+        }
 
-export const None = Tagged('None');
-export const Some = TaggedData('Some');
+        if ('_' in patterns) {
+          // @ts-ignore - this is a valid case
+          return patterns._(data)
+        }
 
-export type Ok<T> = TaggedData<'Ok', T>;
-export type Err<E = string> = TaggedData<'Err', E>;
-export type Result<T, E = string> = Ok<T> | Err<E>;
+        throw new Error(`Unexpected input: ${data}`)
+      },
+    }
+  }
+}
 
-export const Err = TaggedData('Err');
-export const Ok = TaggedData('Ok');
+export const match = createMatch('type')
+
+export type Some<T> = {
+  type: 'Some'
+  value: T
+}
+
+export type None = {
+  type: 'None'
+}
+
+export type Option<T> = Some<T> | None
+
+export const None: None = {
+  type: 'None',
+}
+
+export const Some = <T>(value: T): Some<T> => ({
+  type: 'Some',
+  value,
+})
+
+export type Ok<T> = {
+  type: 'Ok'
+  value: T
+}
+
+export type Err<E = string> = {
+  type: 'Err'
+  info: E
+}
+
+export type Result<T, E = string> = Ok<T> | Err<E>
+
+export const Err = <E = string>(info: E): Err<E> => ({
+  type: 'Err',
+  info,
+})
+
+export const Ok = <T>(value: T): Ok<T> => ({
+  type: 'Ok',
+  value,
+})
